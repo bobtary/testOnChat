@@ -17,18 +17,31 @@ import java.util.Iterator;
 public class Chatter {
     protected String pseudo ;
     protected ArrayList<String> scenario ;
+    protected ChatServeur chatServeur ;
     // ajouter un attribut d instance pour compter le nb de tchatter
     
     // initializer
-    public Chatter(String _pseudo) {this.pseudo = _pseudo;}
-    public Chatter (Personne _pers) {this.pseudo = _pers.doPseudo();}
+    public Chatter(String _pseudo) { this.pseudo = _pseudo; this.chatServeur = new ChatServeur() ; }
+    
+    public Chatter(String _pseudo,ChatServeur _serveur) {this.pseudo = _pseudo;this.chatServeur= _serveur;}
+    
+    public Chatter (Personne _pers){this.pseudo = _pers.doPseudo();}
+    
+    public Chatter (Personne _pers,ChatServeur _serveur) {this.pseudo = _pers.doPseudo();this.chatServeur=_serveur;}
+   
+    //setter
     public void setPseudo(String _pseudo) { this.pseudo = _pseudo ;}
+    
+    public void setServeurChat(ChatServeur _serv) { this.chatServeur = _serv ;}
+    
+    //getter
     public String getPseudo() { return this.pseudo ;}
+    public ChatServeur getServeurChat() { return this.chatServeur;}
     
-    
+    // pour tests : utilisation d un scenario <-> ens de phrases etablies
     public void setScenario(ArrayList<String> _scenar){
         this.scenario = _scenar;
-        this.scenario.add("DISCONNECT"); // precaution
+        this.scenario.add("DISCONNECT"); // par precaution
     }
     
     
@@ -42,7 +55,7 @@ public class Chatter {
         Personne moimeme=new Personne("id_"+alea.toString(), this.pseudo);
         boolean inChat = false;
         try {
-            socket = new Socket ("localhost", 5000); // ouverture d'une connexion TCP
+            socket = new Socket (this.chatServeur.getAdresse(), this.chatServeur.getPort()); // ouverture d'une connexion TCP
             streamObjectOut = new ObjectOutputStream (socket.getOutputStream ());
             // creation du message
             messageOut=new Message (String.format("Salut de la part de %s %s!",moimeme.getPrenom(),moimeme.getNom())); 

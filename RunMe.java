@@ -35,6 +35,9 @@ public class RunMe {
         System.out.println("Toto deseriliase : " + toto.inChaine());
         */
         
+        String phrase2format = "Vous rentrez dans le chat" ;
+        System.out.println(Message.format(phrase2format, "toto", 50)) ;
+        
         
         // toto chat
         Chatter totolechat = new Chatter(toto);

@@ -10,33 +10,45 @@ package testsonchat;
  * @author bobtary
  */
 public class Echange extends Message {
-    protected enum typeEchange {CONNECT,DISCONNECT,DIALOGUE} ;
-    protected enum sousTypeEchange {CONNECT,DISCONNECT};
+    protected enum typeEchange {CONNECT_ACK,CONNECT_REJ,CONNECT_Q,
+    DISCONNECT_Q,DISCONNECT_ACK,DIAL,} ;    
     protected String typeMessage;
     protected String sender ;
-    protected String receiver;
-    //
-    /*public Echange(typeEchange _typeofmess ){
-        super("");
-        this.typeMessage =  _typeofmess.toString();
-    }*/
+    //   
     /* types d'echange :  
     -> avec contenu : message de chat std : message a inclure dans le 
-                        fil de discussion, le destinataire est soit le serveur
-                        soit un partcipant du chat dont l emetteur
+                        fil de discussion, 
+    soit d un chatter  pour le chat[vers le serveur ]    
+    soit du chat [serveur] vers l..* chatter
     -> sans contenu : message emis dans un echange serveur <-> client : soit lord
                         a la connexion, soit a la deconnexion
     */
     
-    // constructeur pour message de chat 
-    public Echange(String _data,String _src,String _dest ){
-        super(_data);
-        this.typeMessage = typeEchange.DIALOGUE.toString();
-    }
+    
     // constructeur pour echange connect/disconnect
-    public Echange(sousTypeEchange _typeEch, String _src,String _dest ){
-        super("");
+    public Echange(typeEchange _typeEch, String _src ){
+        super(""); // pas de contenu
         this.typeMessage =  _typeEch.toString(); 
+        this.sender = _src; 
     } 
+    
+    // constructeur pour message sur le chat [ emis ou recu] 
+    public Echange(String _data,typeEchange _typeEch,String _src ){
+        super(_data);
+        this.typeMessage = typeEchange.DIAL.toString();
+        this.sender = _src;
+    }
+    
+    //setter STD
+    public void setTypeMessage(typeEchange _typeEch) {this.typeMessage=_typeEch.toString();}
+    public void setSender(String _src) {this.sender=_src;}
+
+    //getter classique 
+    public String getTypeMessage() {return this.typeMessage;}
+    public String setSender() {return this.sender;}
+   
+    
+    
+    
     
 }

@@ -15,9 +15,12 @@ import java.util.Iterator;
 
 
 public class Chatter {
-    protected String pseudo ;
-    protected ArrayList<String> scenario ;
+    protected String pseudo ;    
     protected ChatServeur chatServeur ;
+    protected ObjectOutputStream streamObjectOut=null;
+    protected ObjectInputStream streamObjectIn=null;
+    protected Socket socket=null; // sans doute necessaire pour la deconnex
+    protected ArrayList<String> scenario ;
     // ajouter un attribut d instance pour compter le nb de tchatter
     
     // initializer
@@ -34,35 +37,67 @@ public class Chatter {
     
     public void setServeurChat(ChatServeur _serv) { this.chatServeur = _serv ;}
     
+    // initilisation du tube de communication
+    public void setStreamsAndSock() {        
+        if (this.socket!=null){return;} // init deje faite
+        try {
+            // ouverture d'une connexion TCP
+            this.socket = new Socket (this.chatServeur.getAdresse(), 
+                this.chatServeur.getPort());
+            this.streamObjectOut = new ObjectOutputStream (this.socket.getOutputStream ());
+            this.streamObjectIn = new ObjectInputStream (this.socket.getInputStream ());
+        } catch (IOException ioe) { ioe.printStackTrace (); }
+     }
+    
+    // connection <-> trs  message type CONNECT_Q / rcp message type CONNECT_ACK
+    // on gere les tentatives de connexion a un autre niveau
+    public boolean connect() {
+         boolean bool = false;
+         Echange messRcv =null ;
+         Echange connexEch = null ;
+         
+         connexEch = new Echange(Echange.typeEchange.CONNECT_Q, this.getPseudo());
+         try {
+            this.streamObjectOut.writeObject(connexEch);
+            messRcv = (Echange) streamObjectIn.readObject() ;
+            if (messRcv.getTypeMessage().toString().matches("CONNECT_ACK")) {
+                bool=true;}
+            }
+          catch (IOException ioe) { ioe.printStackTrace (); }
+          catch (ClassNotFoundException e) { e.printStackTrace (); }
+          return bool ;
+     }
+    
     //getter
     public String getPseudo() { return this.pseudo ;}
     public ChatServeur getServeurChat() { return this.chatServeur;}
+    public Socket getSocket(){return this.socket;}
     
     // pour tests : utilisation d un scenario <-> ens de phrases etablies
     public void setScenario(ArrayList<String> _scenar){
         this.scenario = _scenar;
         this.scenario.add("DISCONNECT"); // par precaution
+       
     }
     
     
     public void dialogue() {
-        Socket socket=null;
-        ObjectOutputStream streamObjectOut=null;
-        ObjectInputStream streamObjectIn=null;
+        
+        
         Message message=null;
         Message messageOut=null;
         Integer alea = (int) Math.rint(Math.random() * 1000);
         Personne moimeme=new Personne("id_"+alea.toString(), this.pseudo);
         boolean inChat = false;
         try {
-            socket = new Socket (this.chatServeur.getAdresse(), this.chatServeur.getPort()); // ouverture d'une connexion TCP
-            streamObjectOut = new ObjectOutputStream (socket.getOutputStream ());
+            //socket = new Socket (this.chatServeur.getAdresse(), this.chatServeur.getPort()); // ouverture d'une connexion TCP
+            //streamObjectOut = new ObjectOutputStream (socket.getOutputStream ());
             // creation du message
             messageOut=new Message (String.format("Salut de la part de %s %s!",moimeme.getPrenom(),moimeme.getNom())); 
             streamObjectOut.writeObject (messageOut); // envoie vers le serveur de cette « requête »       
             
             // lecture de la réponse 
-            streamObjectIn = new ObjectInputStream (socket.getInputStream ());
+            //streamObjectIn = new ObjectInputStream (socket.getInputStream ());
             message = (Message) streamObjectIn.readObject() ;
             if (message.toString().matches("TALK")) {inChat=true;}
            
@@ -90,8 +125,7 @@ public class Chatter {
             //System.out.println ("le serveur retourne : " + (Message) streamObjectIn.readObject ());
             
             
-        } catch (UnknownHostException e) { e.printStackTrace (); }
-         catch (IOException e) { e.printStackTrace (); }
+        } catch (IOException e) { e.printStackTrace (); }
          catch (ClassNotFoundException e) { e.printStackTrace (); }
         finally {
             if (socket!=null) {
